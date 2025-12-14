@@ -1,0 +1,996 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+#map { height: 360px; width: 640px }
+button { background-color: white; color: black}
+* {font-family: "Arial"}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body style="background-color: black; color: white">
+<div id="language_select" style="text-align: center">
+Pick any of the following languages:
+<div id="buttons">
+</div>
+</div>
+<div id="main" hidden style="text-align: center; font-size: 10px">
+<br>
+<h1 style='color: white'> The Economic Explorer </h1>
+<div style="background-color: red" width="200" height="200" id="tooltip">  </div>
+<br>
+<div id="btns">
+<button onmouseleave="document.getElementById('tooltip').innerText = ``" onmouseover="hover(this)" onclick="select(this)"> Poverty Index </button>
+<button onmouseleave="document.getElementById('tooltip').innerText = ``" onmouseover="hover(this)" onclick="select(this)"> Atkinson index </button>
+<button onmouseleave="document.getElementById('tooltip').innerText = ``" onmouseover="hover(this)" onclick="select(this)"> Gini coefficient of income before application of tax </button>
+<button onmouseleave="document.getElementById('tooltip').innerText = ``" onmouseover="hover(this)" onclick="select(this)"> Gini coefficient of income after application of tax </button>
+<button onmouseleave="document.getElementById('tooltip').innerText = ``" onmouseover="hover(this)" onclick="select(this)"> Growth efficiency </button>
+</div>
+<div id="map" ></div>
+<div id="explanation" style='color: white'>
+
+</div>
+</div>
+<script>
+// initialize the map on the "map" div with a given center and zoom
+var map = L.map('map', {
+    center: [0, 0],
+    zoom: 2
+});
+var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+//Our World in Data names
+let language_select = 0
+const language_names = ["English", "اَلْعَرَبِيَّةُ", "Deutsch", "français", "汉语", "italiano", "español"]
+for(let i = 0; i < language_names.length; i++){
+    document.getElementById("buttons").innerHTML += "<button onclick='select_language(this)'>" + language_names[i] + "</button>"   
+}
+let simple_language = ["The poverty index can be thought of as measuring how poor a country can feel for someone living in there, so Equatorial Guinea feels 'poor', even if it might be an upper-middle income country.@The Atkinson is meant to calculate how much theorical economic welfare is lost from inequality@This tries to measure economic inequality before taxation by trying to think of a perfect standard theorical graph, with a higher score indicating how different the actual income distribution graph is from that.@This tries to measure economic inequality after taxation by trying to think of a perfect standard theorical graph, with a higher score indicating how different the actual income distribution graph is from that.@This measures the amount of loss by comparing the GDP per capita growth of the nation to an ideal calculated based on the country's economic diversification, GDP per capita and trade potential (represented as the logarithm of the GDP).", "يمكن اعتبار مؤشر الفقر بمثابة مقياس لمدى الفقر الذي يشعر به شخص يعيش في بلد ما، لذا فإن غينيا الاستوائية تبدو ”فقيرة“، حتى لو كانت دولة ذات دخل متوسط أعلى.@يهدف مؤشر أتكينسون إلى حساب مقدار الخسارة النظرية في الرفاهية الاقتصادية الناجمة عن عدم المساواة@يحاول هذا المؤشر قياس عدم المساواة الاقتصادية قبل الضرائب من خلال التفكير في رسم بياني نظري مثالي، حيث تشير الدرجة الأعلى إلى مدى اختلاف الرسم البياني الفعلي لتوزيع الدخل عن ذلك الرسم البياني.@ يحاول هذا قياس عدم المساواة الاقتصادية بعد الضرائب من خلال التفكير في رسم بياني نظري مثالي، حيث تشير النتيجة الأعلى إلى مدى اختلاف الرسم البياني الفعلي لتوزيع الدخل عن ذلك.@يقيس هذا مقدار الخسارة من خلال مقارنة نمو الناتج المحلي الإجمالي للفرد في الدولة بالمثالي المحسوب بناءً على التنوع الاقتصادي للبلد، والناتج المحلي الإجمالي للفرد، والإمكانات التجارية (ممثلة باللوغاريتم الناتج المحلي الإجمالي).", `Der Armutsindex kann als Maß dafür angesehen werden, wie arm sich ein Land für jemanden anfühlt, der dort lebt. So fühlt sich Äquatorialguinea „arm“ an, auch wenn es ein Land mit hohem mittlerem Einkommen ist.@Der Atkinson-Index soll berechnen, wie viel theoretischer wirtschaftlicher Wohlstand durch Ungleichheit verloren geht.@Dieser versucht, die wirtschaftliche Ungleichheit vor der Besteuerung zu messen, indem er versucht, sich einen perfekten theoretischen Standardgraphen vorzustellen, wobei eine höhere Punktzahl angibt, wie sehr sich der tatsächliche Einkommensverteilungsgraph davon unterscheidet.@ Damit wird versucht, die wirtschaftliche Ungleichheit nach Steuern zu messen, indem man sich ein perfektes theoretisches Standarddiagramm vorstellt, wobei eine höhere Punktzahl angibt, wie stark das tatsächliche Einkommensverteilungsdiagramm davon abweicht. @Damit wird der Verlust gemessen, indem das Pro-Kopf-BIP-Wachstum des Landes mit einem Idealwert verglichen wird, der auf der Grundlage der wirtschaftlichen Diversifizierung, des Pro-Kopf-BIP und des Handelspotenzials des Landes (dargestellt als Logarithmus des BIP) berechnet wird.`, `L'indice de pauvreté peut être considéré comme une mesure du degré de pauvreté qu'un pays peut ressentir pour quelqu'un qui y vit. Ainsi, la Guinée équatoriale est considérée comme « pauvre », même si elle est un pays à revenu intermédiaire supérieur. @L'indice d'Atkinson vise à calculer la perte théorique de bien-être économique due à l'inégalité. @Il tente de mesurer l'inégalité économique avant imposition en imaginant un graphique théorique standard parfait, un score élevé indiquant à quel point le graphique de répartition des revenus réel s'en éloigne. @ Il s'agit de mesurer les inégalités économiques après imposition en imaginant un graphique théorique standard parfait, un score élevé indiquant l'écart entre ce graphique et le graphique réel de la répartition des revenus.@Cet indice mesure le montant des pertes en comparant la croissance du PIB par habitant du pays à un idéal calculé sur la base de la diversification économique du pays, du PIB par habitant et du potentiel commercial (représenté par le logarithme du PIB).`, `贫困指数可理解为衡量一个国家对当地居民而言的贫困感受程度，因此赤道几内亚会给人“贫穷”的感受，即便它可能是中等偏上收入国家。@阿特金森系数旨在计算不平等导致的理论经济福利损失@该指标通过构想理想的理论收入分布图来衡量税前经济不平等，分数越高表明实际收入分布图与理想图的偏差越大。@ 该指标通过构想理想理论曲线来衡量税后经济不平等程度，分数越高表明实际收入分配曲线与理想曲线的偏差越大。@该指标通过比较国家人均GDP增长率与基于经济多元化程度、人均GDP及贸易潜力（以GDP对数形式呈现）计算的理想值，来衡量损失程度。`, `L'indice di povertà può essere considerato come una misura di quanto un paese possa sembrare povero a chi vi vive, quindi la Guinea Equatoriale sembra “povera”, anche se potrebbe essere un paese a reddito medio-alto. @L'indice di Atkinson ha lo scopo di calcolare quanto benessere economico teorico si perde a causa della disuguaglianza. @Questo indice cerca di misurare la disuguaglianza economica prima della tassazione, cercando di immaginare un grafico teorico standard perfetto, con un punteggio più alto che indica quanto il grafico della distribuzione del reddito effettivo sia diverso da quello. @ Questo indice cerca di misurare la disuguaglianza economica al netto delle imposte, ipotizzando un grafico teorico standard perfetto, dove un punteggio più alto indica quanto il grafico della distribuzione del reddito effettiva si discosti da quello ipotizzato. @Questo indice misura l'entità della perdita confrontando la crescita del PIL pro capite della nazione con un valore ideale calcolato sulla base della diversificazione economica del Paese, del PIL pro capite e del potenziale commerciale (rappresentato come logaritmo del PIL).`, `El índice de pobreza puede considerarse como una medida de lo pobre que puede parecer un país para alguien que vive en él, por lo que Guinea Ecuatorial parece «pobre», aunque sea un país de ingresos medios-altos. @El índice de Atkinson tiene por objeto calcular cuánto bienestar económico teórico se pierde debido a la desigualdad. @Este índice trata de medir la desigualdad económica antes de los impuestos, tratando de imaginar un gráfico teórico estándar perfecto, en el que una puntuación más alta indica lo diferente que es el gráfico de distribución de ingresos real de ese gráfico. @ Esto intenta medir la desigualdad económica después de los impuestos, tratando de pensar en un gráfico teórico estándar perfecto, en el que una puntuación más alta indica cuán diferente es el gráfico de distribución de ingresos real de ese. @Esto mide la cantidad de pérdida comparando el crecimiento del PIB per cápita de la nación con un ideal calculado en función de la diversificación económica del país, el PIB per cápita y el potencial comercial (representado como el logaritmo del PIB).`]
+let texts = [`Based on the Our World in Data (https://ourworldindata.org/poverty) data avaliable. Different weights were being placed on each based on how income is distributed, with the calculation using the value function being based on the formula used to calculate HDI, except for the remainder group of people who weren't below any of the poverty lines, in which case the value of 1 was used.
+<br><img width="640" height="360" src='https://i.ibb.co/5Wcychz6/img.png'></img><br>
+For the case of Botswana, since data from 2015 seems to reflect current reality (https://thedocs.worldbank.org/en/doc/bae48ff2fefc5a869546775b3f010735-0500062021/related/mpo-bwa.pdf), that data was used instead.
+Last updated in 2025.
+@
+The Atkinson index can be defined to have various levels of sensitivity to change in the bottom of the distribution (represented by the Greek letter episilon). The formula is as follows (μ stands for the mean income, whilst Yi is individual income):
+<br><img width="640" height="360" src="https://wikimedia.org/api/rest_v1/media/math/render/svg/cd027709a8e3c6326bb8f8da78d4fc19960f5a5c" style="background-color: white">
+@
+The Ginis displayed reflects inequality of income BEFORE taxation and NOT AFTER taxatation.
+The Gini coefficient uses a Lorenz curve to calculate inequality:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+<br>@
+The Ginis displayed reflects inequality of income AFTER taxation and NOT BEFORE taxatation.
+The Gini coefficient uses a Lorenz curve to calculate inequality:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">@Formula: (((( ((((An average of the annual GDP per capita growth percentage over a span of five years, except if data for all five years are not available ) - ((1 - (GDP per capita / 48000))*7)) ) / (log(GDP)) ) )) ) - (Revenue sub-index of diversification index * 0.8)) `, `استنادًا إلى البيانات المتاحة في موقع Our World in Data (https://ourworldindata.org/poverty). تم وضع أوزان مختلفة على كل منها بناءً على كيفية توزيع الدخل، مع استخدام وظيفة القيمة في الحساب بناءً على الصيغة المستخدمة لحساب مؤشر التنمية البشرية، باستثناء المجموعة المتبقية من الأشخاص الذين لم يكونوا تحت أي من خطوط الفقر، حيث تم استخدام القيمة 1 في هذه الحالة.
+<br><img width="640" height="360" src="https://i.ibb.co/5Wcychz6/img.png"></img><br>
+في حالة بوتسوانا، نظرًا لأن البيانات من عام 2015 تبدو أنها تعكس الواقع الحالي (https://thedocs.worldbank.org/en/doc/bae48ff2fefc5a869546775b3f010735-0500062021/related/mpo-bwa.pdf)، فقد تم استخدام تلك البيانات بدلاً من ذلك.
+آخر تحديث في عام 2025.
+@
+يمكن تعريف مؤشر أتكينسون على أنه يحتوي على مستويات مختلفة من الحساسية للتغيير في الجزء السفلي من التوزيع (ممثلة بالحرف اليوناني إبيسيلون). الصيغة هي كما يلي (μ تمثل متوسط الدخل، بينما Yi تمثل الدخل الفردي):
+<br><img width="640" height="360" src="https://wikimedia.org/api/rest_v1/media/math/render/svg/cd027709a8e3c6326bb8f8da78d4fc19960f5a5c" style="background-color: white">
+<br>@
+يعكس مؤشر جيني عدم المساواة في الدخل قبل الضرائب وليس بعد الضرائب.
+يستخدم معامل جيني منحنى لورنز لحساب عدم المساواة:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+<br>@
+يعكس مؤشر جيني الموضح عدم المساواة في الدخل بعد الضرائب وليس قبل الضرائب.
+يستخدم معامل جيني منحنى لورنز لحساب عدم المساواة:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-@الصيغة: (((( ((((متوسط النسبة المئوية للنمو السنوي للناتج المحلي الإجمالي للفرد على مدى خمس سنوات، باستثناء الحالات التي لا تتوفر فيها بيانات عن السنوات الخمس جميعها ) - ((1 - (الناتج المحلي الإجمالي للفرد / 48000))*7)) ) / (log(الناتج المحلي الإجمالي)) ) )) ) - (مؤشر الإيرادات الفرعي لمؤشر التنويع * 0.8))`, `Basierend auf den verfügbaren Daten von Our World in Data (https://ourworldindata.org/poverty). Je nach Einkommensverteilung wurden unterschiedliche Gewichtungen vorgenommen, wobei die Berechnung unter Verwendung der Wertfunktion auf der Formel zur Berechnung des HDI basierte, mit Ausnahme der Restgruppe von Personen, die unter keiner der Armutsgrenzen lagen. In diesem Fall wurde der Wert 1 verwendet.
+<br><img width="640" height="360" src="https://i.ibb.co/5Wcychz6/img.png"></img><br>
+Im Fall von Botswana wurden stattdessen die Daten aus dem Jahr 2015 verwendet, da diese offenbar die aktuelle Realität widerspiegeln (https://thedocs.worldbank.org/en/doc/bae48ff2fefc5a869546775b3f010735-0500062021/related/mpo-bwa.pdf).
+Zuletzt aktualisiert im Jahr 2025.
+@
+Der Atkinson-Index kann so definiert werden, dass er verschiedene Empfindlichkeitsstufen gegenüber Veränderungen am unteren Ende der Verteilung aufweist (dargestellt durch den griechischen Buchstaben Epsilon). Die Formel lautet wie folgt (μ steht für das Durchschnittseinkommen, während Yi das individuelle Einkommen ist):
+<br><img width="640" height="360" src="https://wikimedia.org/api/rest_v1/media/math/render/svg/cd027709a8e3c6326bb8f8da78d4fc19960f5a5c" style="background-color: white">
+<br>@
+Der angezeigte Gini-Koeffizient spiegelt die Einkommensungleichheit VOR der Besteuerung wider und NICHT NACH der Besteuerung.
+Der Gini-Koeffizient verwendet eine Lorenzkurve zur Berechnung der Ungleichheit:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+<br>@
+Die angezeigten Gini-Koeffizienten spiegeln die Einkommensungleichheit NACH der Besteuerung wider und NICHT VOR der Besteuerung.
+Der Gini-Koeffizient verwendet eine Lorenzkurve zur Berechnung der Ungleichheit:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">@Formel: (((( ((((Durchschnitt des jährlichen Pro-Kopf-BIP-Wachstums über einen Zeitraum von fünf Jahren, außer wenn Daten für alle fünf Jahre nicht verfügbar sind ) - ((1 - (Pro-Kopf-BIP / 48000))*7)) ) / (log(BIP)) ) )) ) - (Umsatz-Subindex des Diversifizierungsindex * 0,8))`, `Sur la base des données disponibles sur Our World in Data (https://ourworldindata.org/poverty). Différentes pondérations ont été attribuées à chaque élément en fonction de la répartition des revenus, le calcul utilisant la fonction de valeur étant basé sur la formule utilisée pour calculer l'IDH, à l'exception du groupe restant de personnes qui ne se trouvaient en dessous d'aucun seuil de pauvreté, auquel cas la valeur 1 a été utilisée.
+<br><img width="640" height="360" src="https://i.ibb.co/5Wcychz6/img.png"></img><br>
+Dans le cas du Botswana, les données de 2015 semblant refléter la réalité actuelle (https://thedocs.worldbank.org/en/doc/bae48ff2fefc5a869546775b3f010735-0500062021/related/mpo-bwa.pdf), ce sont celles-ci qui ont été utilisées.
+Dernière mise à jour en 2025.
+@
+L'indice d'Atkinson peut être défini comme ayant différents niveaux de sensibilité aux changements dans la partie inférieure de la distribution (représentée par la lettre grecque épsilon). La formule est la suivante (μ représente le revenu moyen, tandis que Yi est le revenu individuel) :
+<br><img width="640" height="360" src="https://wikimedia.org/api/rest_v1/media/math/render/svg/cd027709a8e3c6326bb8f8da78d4fc19960f5a5c" style="background-color: white">
+<br>@Le coefficient de Gini affiché reflète l'inégalité des revenus AVANT imposition et NON APRÈS imposition.
+Le coefficient de Gini utilise une courbe de Lorenz pour calculer l'inégalité :
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+<br>@
+Les coefficients de Gini affichés reflètent les inégalités de revenus APRÈS imposition et NON AVANT imposition.
+Le coefficient de Gini utilise une courbe de Lorenz pour calculer l'inégalité :
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">@Formule : (((( ((((Moyenne du pourcentage de croissance annuel du PIB par habitant sur une période de cinq ans, sauf si les données pour les cinq années ne sont pas disponibles ) - ((1 - (PIB par habitant / 48 000))*7)) ) / (log(PIB)) ) )) ) - (Sous-indice des recettes de l'indice de diversification * 0,8))`, `基于"我们的世界数据"（https://ourworldindata.org/poverty）提供的数据。根据收入分布情况对各项指标赋予不同权重，价值函数的计算采用与人类发展指数（HDI）相同的计算公式，但对于未低于任何贫困线的人群，则赋予1的值。
+<br><img width="640" height="360" src="https://i.ibb.co/5Wcychz6/img.png"></img><br>
+针对博茨瓦纳的情况，鉴于2015年数据（https://thedocs.worldbank.org/en/doc/bae48ff2fefc5a869546775b3f010735-0500062021/related/mpo-bwa.pdf）更贴近当前实际状况，故采用该年数据。
+最后更新于2025年。
+@
+阿特金森指数可定义为对分布底层变化具有不同敏感度（用希腊字母ε表示）。计算公式如下（μ代表平均收入，Yi为个人收入）：
+<br><img width="640" height="360" src="https://wikimedia.org/api/rest_v1/media/math/render/svg/cd027709a8e3c6326bb8f8da78d4fc19960f5a5c" style="background-color: white">
+<br>@所显示的基尼系数反映的是征税前的收入不平等状况，而非征税后的结果。
+基尼系数通过洛伦兹曲线计算不平等程度：
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+<br>@
+所示基尼系数反映的是税后收入不平等状况，而非税前收入不平等。
+基尼系数通过洛伦兹曲线计算不平等程度：
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">@公式：(((((((五年间人均GDP年均增长率的平均值，若五年数据不全则不计算）-((1 - (人均GDP / 48000))*7)) ) / (log(GDP)) ) )) ) - (产业多元化指数中的收入子指数 * 0.8))`, `Sulla base dei dati disponibili su Our World in Data (https://ourworldindata.org/poverty). A ciascuno è stato assegnato un peso diverso in base alla distribuzione del reddito, con il calcolo utilizzando la funzione di valore basata sulla formula utilizzata per calcolare l'HDI, ad eccezione del gruppo restante di persone che non si trovavano al di sotto di alcuna soglia di povertà, nel qual caso è stato utilizzato il valore 1.
+<br><img width="640" height="360" src="https://i.ibb.co/5Wcychz6/img.png"></img><br>
+Nel caso del Botswana, poiché i dati del 2015 sembrano riflettere la realtà attuale (https://thedocs.worldbank.org/en/doc/bae48ff2fefc5a869546775b3f010735-0500062021/related/mpo-bwa.pdf), sono stati utilizzati quelli.
+Ultimo aggiornamento nel 2025.
+@
+L'indice di Atkinson può essere definito in modo da avere vari livelli di sensibilità al cambiamento nella parte inferiore della distribuzione (rappresentata dalla lettera greca episilon). La formula è la seguente (μ sta per reddito medio, mentre Yi è il reddito individuale):
+<br><img width="640" height="360" src="https://wikimedia.org/api/rest_v1/media/math/render/svg/cd027709a8e3c6326bb8f8da78d4fc19960f5a5c" style="background-color: white">
+<br>@Il coefficiente di Gini mostra la disparità di reddito PRIMA della tassazione e NON DOPO la tassazione.
+Il coefficiente di Gini utilizza una curva di Lorenz per calcolare la disparità:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+<br>@
+Il coefficiente di Gini mostrato riflette la disparità di reddito DOPO la tassazione e NON PRIMA della tassazione.
+Il coefficiente di Gini utilizza una curva di Lorenz per calcolare la disuguaglianza:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">@Formula: (((( ((((Media della percentuale di crescita annuale del PIL pro capite su un arco di cinque anni, tranne nel caso in cui non siano disponibili i dati relativi a tutti e cinque gli anni ) - ((1 - (PIL pro capite / 48000))*7)) ) / (log(PIL)) ) )) ) - (Sottoindice delle entrate dell'indice di diversificazione * 0,8))`, `Basado en los datos disponibles en Our World in Data (https://ourworldindata.org/poverty). Se asignaron diferentes ponderaciones a cada uno en función de la distribución de los ingresos, y el cálculo utilizando la función de valor se basó en la fórmula utilizada para calcular el IDH, excepto para el grupo restante de personas que no se encontraban por debajo de ninguna de las líneas de pobreza, en cuyo caso se utilizó el valor 1.
+<br><img width="640" height="360" src="https://i.ibb.co/5Wcychz6/img.png"></img><br>
+En el caso de Botsuana, dado que los datos de 2015 parecen reflejar la realidad actual (https://thedocs.worldbank.org/en/doc/bae48ff2fefc5a869546775b3f010735-0500062021/related/mpo-bwa.pdf), se utilizaron esos datos.
+Última actualización en 2025.
+@
+El índice de Atkinson puede definirse para que tenga varios niveles de sensibilidad al cambio en la parte inferior de la distribución (representada por la letra griega episilon). La fórmula es la siguiente (μ representa la renta media, mientras que Yi es la renta individual):
+<br><img width="640" height="360" src="https://wikimedia.org/api/rest_v1/media/math/render/svg/cd027709a8e3c6326bb8f8da78d4fc19960f5a5c" style="background-color: white">
+<br>@El índice de Gini muestra la desigualdad de ingresos ANTES de impuestos y NO DESPUÉS de impuestos.
+El coeficiente de Gini utiliza una curva de Lorenz para calcular la desigualdad:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+<br>@
+Los coeficientes de Gini mostrados reflejan la desigualdad de ingresos DESPUÉS de los impuestos y NO ANTES de los impuestos.
+El coeficiente de Gini utiliza una curva de Lorenz para calcular la desigualdad:
+<br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">
+@
+Fórmula: ((((((Promedio del porcentaje de crecimiento anual del PIB per cápita durante un período de cinco años, excepto si no se dispone de datos para los cinco años) - ((1 - (PIB per cápita / 48 000))*7)) ) / (log(PIB)) ) )) ) - (Subíndice de ingresos del índice de diversificación * 0,8))`]
+let list = [{'Botswana': 0.538,
+'Albania': 0.615,
+'Armenia': 0.57,
+'Australia': 0.925,
+'Austria': 0.951,
+'Bangladesh': 0.552,
+'Belarus': 0.653,
+'Belgium': 0.949,
+'Benin': 0.49,
+'Bhutan': 0.637,
+'Bolivia': 0.665,
+'Brazil': 0.661,
+'Bulgaria': 0.768,
+'Burkina Faso': 0.451,
+'Burundi': 0.343,
+'Cameroon': 0.5,
+'Canada': 0.948,
+'Central African Republic': 0.339,
+'Chad': 0.456,
+'Chile': 0.719,
+'China': 0.631,
+'Colombia': 0.615,
+'Costa Rica': 0.711,
+'Cote dIvoire': 0.51,
+'Croatia': 0.817,
+'Cyprus': 0.913,
+'Czechia': 0.84,
+'Democratic Republic of Congo': 0.269,
+'Denmark': 0.953,
+'Dominican Republic': 0.668,
+'Ecuador': 0.614,
+'Egypt': 0.571,
+'El Salvador': 0.608,
+'Equatorial Guinea': 0.56,
+'Estonia': 0.82,
+'Ethiopia': 0.457,
+'Fiji': 0.562,
+'Finland': 0.936,
+'France': 0.921,
+'Gambia': 0.509,
+'Georgia': 0.578,
+'Germany': 0.946,
+'Greece': 0.755,
+'Guatemala': 0.576,
+'GuineaBissau': 0.455,
+'Honduras': 0.554,
+'Iceland': 0.95,
+'India': 0.546,
+'Indonesia': 0.559,
+'Iran': 0.595,
+'Iraq': 0.602,
+'Ireland': 0.91,
+'Israel': 0.802,
+'Italy': 0.877,
+'Jamaica': 0.643,
+'Japan': 0.847,
+'Kazakhstan': 0.619,
+'Kenya': 0.436,
+'Kiribati': 0.549,
+'Kosovo': 0.567,
+'Kyrgyzstan': 0.558,
+'Latvia': 0.791,
+'Lebanon': 0.57,
+'Lithuania': 0.82,
+'Luxembourg': 0.966,
+'Madagascar': 0.364,
+'Malawi': 0.338,
+'Malaysia': 0.772,
+'Maldives': 0.636,
+'Mali': 0.467,
+'Malta': 0.909,
+'Marshall Islands': 0.597,
+'Mauritania': 0.541,
+'Mexico': 0.627,
+'Moldova': 0.607,
+'Mongolia': 0.611,
+'Montenegro': 0.65,
+'Mozambique': 0.289,
+'Nepal': 0.573,
+'Netherlands': 0.963,
+'Niger': 0.401,
+'Nigeria': 0.447,
+'North Macedonia': 0.622,
+'Norway': 0.973,
+'Palestine': 0.613,
+'Panama': 0.688,
+'Paraguay': 0.647,
+'Peru': 0.597,
+'Philippines': 0.539,
+'Poland': 0.836,
+'Portugal': 0.795,
+'Romania': 0.757,
+'Russia': 0.691,
+'Rwanda': 0.463,
+'Senegal': 0.52,
+'Serbia': 0.66,
+'Slovakia': 0.692,
+'Slovenia': 0.911,
+'South Korea': 0.905,
+'Spain': 0.872,
+'Sri Lanka': 0.58,
+'Suriname': 0.633,
+'Sweden': 0.919,
+'Switzerland': 0.953,
+'Syria': 0.515,
+'Taiwan': 0.883,
+'Tajikistan': 0.565,
+'Thailand': 0.655,
+'Togo': 0.471,
+'Tonga': 0.599,
+'Tunisia': 0.619,
+'Turkey': 0.697,
+'Uganda': 0.392,
+'Ukraine': 0.619,
+'United Kingdom': 0.906,
+'United States': 0.919,
+'Uruguay': 0.75,
+'Uzbekistan': 0.624,
+'Vanuatu': 0.512,
+'Vietnam': 0.623,
+'Zambia': 0.316,
+'Zimbabwe': 0.431}, {'Afghanistan': 0.29225096,
+'Albania': 0.19734354,
+'Algeria': 0.16809192,
+'Andorra': 0.14402476,
+'Angola': 0.5806592,
+'Argentina': 0.22595336,
+'Armenia': 0.15120824,
+'Australia': 0.18489903,
+'Austria': 0.15607019,
+'Azerbaijan': 0.057027344,
+'Bahamas': 0.37554255,
+'Bangladesh': 0.35941556,
+'Barbados': 0.48983565,
+'Belarus': 0.12700656,
+'Belgium': 0.11316336,
+'Benin': 0.39259872,
+'Bhutan': 0.28575492,
+'Bolivia': 0.2691283,
+'Bosnia and Herzegovina': 0.2650154,
+'Botswana': 0.45481667,
+'Brazil': 0.43725312,
+'Brunei': 0.12123743,
+'Bulgaria': 0.23715585,
+'Burkina Faso': 0.4338111,
+'Burundi': 0.39518523,
+'Cambodia': 0.35817787,
+'Cameroon': 0.52859527,
+'Canada': 0.15982017,
+'Cape Verde': 0.45382917,
+'Central African Republic': 0.45469138,
+'Chad': 0.3823162,
+'Chile': 0.37739715,
+'China': 0.30287558,
+'Colombia': 0.4399135,
+'Comoros': 0.52444106,
+'Congo': 0.5511418,
+'Costa Rica': 0.35586625,
+'Cote dIvoire': 0.43445924,
+'Croatia': 0.1354047,
+'Cyprus': 0.14848529,
+'Czechia': 0.11109454,
+'Democratic Republic of Congo': 0.44814995,
+'Denmark': 0.1101864,
+'Djibouti': 0.28692153,
+'Dominican Republic': 0.22948858,
+'East Timor': 0.16075568,
+'Ecuador': 0.3060738,
+'Egypt': 0.18677053,
+'El Salvador': 0.23330578,
+'Estonia': 0.15673587,
+'Eswatini': 0.6049704,
+'Ethiopia': 0.36454982,
+'Fiji': 0.18517251,
+'Finland': 0.12752181,
+'France': 0.17887096,
+'Gabon': 0.3141673,
+'Gambia': 0.40111363,
+'Georgia': 0.21449909,
+'Germany': 0.14346063,
+'Ghana': 0.50950193,
+'Greece': 0.16824675,
+'Guatemala': 0.32801768,
+'Guinea': 0.31631193,
+'GuineaBissau': 0.35312974,
+'Haiti': 0.5206961,
+'Honduras': 0.35566714,
+'Hungary': 0.11335958,
+'Iceland': 0.106782064,
+'India': 0.3736087,
+'Indonesia': 0.2363562,
+'Iran': 0.27515072,
+'Iraq': 0.2547499,
+'Ireland': 0.13962354,
+'Israel': 0.24020521,
+'Italy': 0.20847471,
+'Jamaica': 0.33683488,
+'Japan': 0.17123479,
+'Jordan': 0.24110919,
+'Kazakhstan': 0.14709416,
+'Kenya': 0.39645642,
+'Kiribati': 0.1554128,
+'Kyrgyzstan': 0.15337282,
+'Laos': 0.23560792,
+'Latvia': 0.19027184,
+'Lebanon': 0.20240517,
+'Lesotho': 0.51428884,
+'Liberia': 0.3642431,
+'Lithuania': 0.20366654,
+'Luxembourg': 0.16435212,
+'Madagascar': 0.4488378,
+'Malawi': 0.3925333,
+'Malaysia': 0.24758764,
+'Maldives': 0.2856471,
+'Mali': 0.22962159,
+'Malta': 0.15513365,
+'Marshall Islands': 0.22492708,
+'Mauritania': 0.34999275,
+'Mauritius': 0.31444103,
+'Mexico': 0.28424138,
+'Micronesia country': 0.25792882,
+'Moldova': 0.13551316,
+'Mongolia': 0.19192705,
+'Montenegro': 0.19916815,
+'Morocco': 0.25922683,
+'Mozambique': 0.54412735,
+'Myanmar': 0.17556001,
+'Namibia': 0.5299237,
+'Nauru': 0.18474954,
+'Nepal': 0.3191333,
+'Netherlands': 0.11375921,
+'New Zealand': 0.18093674,
+'Nicaragua': 0.35278973,
+'Niger': 0.3740003,
+'Nigeria': 0.18625459,
+'North Macedonia': 0.20480633,
+'Norway': 0.1427021,
+'Oman': 0.23685408,
+'Pakistan': 0.28155556,
+'Palau': 0.40917686,
+'Palestine': 0.31447953,
+'Panama': 0.388731,
+'Papua New Guinea': 0.27171203,
+'Paraguay': 0.34570518,
+'Peru': 0.30616513,
+'Philippines': 0.23556326,
+'Poland': 0.19801873,
+'Portugal': 0.18357037,
+'Romania': 0.20869718,
+'Russia': 0.18674591,
+'Rwanda': 0.44333994,
+'Saint Lucia': 0.3915866,
+'Samoa': 0.23740782,
+'Sao Tome and Principe': 0.42357934,
+'Senegal': 0.39283875,
+'Serbia': 0.13458277,
+'Seychelles': 0.16562201,
+'Sierra Leone': 0.3592492,
+'Singapore': 0.25935096,
+'Slovakia': 0.10008188,
+'Slovenia': 0.1001645,
+'Solomon Islands': 0.22543071,
+'Somalia': 0.47405118,
+'South Africa': 0.5993249,
+'South Korea': 0.16421616,
+'South Sudan': 0.4885379,
+'Spain': 0.19181988,
+'Sri Lanka': 0.36579406,
+'Sudan': 0.39337265,
+'Sweden': 0.1694298,
+'Switzerland': 0.17668954,
+'Tajikistan': 0.19926411,
+'Tanzania': 0.41099668,
+'Thailand': 0.21709934,
+'Togo': 0.4407567,
+'Tonga': 0.20735827,
+'Tunisia': 0.22917065,
+'Turkey': 0.2890539,
+'Tuvalu': 0.25146466,
+'Uganda': 0.43610364,
+'Ukraine': 0.13280076,
+'United Arab Emirates': 0.10419066,
+'United Kingdom': 0.16703635,
+'United States': 0.23928504,
+'Uruguay': 0.25136507,
+'Vanuatu': 0.19149798,
+'Venezuela': 0.21139072,
+'Vietnam': 0.21053678,
+'Yemen': 0.2318842,
+'Zambia': 0.63398504,
+'Zimbabwe': 0.5288754}, {'Afghanistan': 0.48317343,
+'Albania': 0.4818845,
+'Algeria': 0.5413402,
+'Andorra': 0.48327094,
+'Angola': 0.67773485,
+'Antigua and Barbuda': 0.5867686,
+'Argentina': 0.549996,
+'Armenia': 0.47361723,
+'Australia': 0.48274976,
+'Austria': 0.41920605,
+'Azerbaijan': 0.42649755,
+'Bahamas': 0.6425302,
+'Bahrain': 0.65143526,
+'Bangladesh': 0.5002749,
+'Barbados': 0.5867686,
+'Belarus': 0.38089305,
+'Belgium': 0.4325666,
+'Belize': 0.6425302,
+'Benin': 0.5256483,
+'Bhutan': 0.5260754,
+'Bolivia': 0.6425302,
+'Bosnia and Herzegovina': 0.47696364,
+'Botswana': 0.6909081,
+'Brazil': 0.6917976,
+'Brunei': 0.43955243,
+'Bulgaria': 0.5099395,
+'Burkina Faso': 0.55915356,
+'Burundi': 0.5573985,
+'Cambodia': 0.5804666,
+'Cameroon': 0.58562136,
+'Canada': 0.5007696,
+'Cape Verde': 0.5918955,
+'Central African Republic': 0.6015719,
+'Chad': 0.5519881,
+'Chile': 0.68797165,
+'China': 0.56463957,
+'Colombia': 0.7249956,
+'Comoros': 0.61169124,
+'Congo': 0.65529925,
+'Costa Rica': 0.6585465,
+'Cote dIvoire': 0.62549764,
+'Croatia': 0.45091376,
+'Cuba': 0.5751208,
+'Cyprus': 0.44351274,
+'Czechia': 0.33254507,
+'Democratic Republic of Congo': 0.6253566,
+'Denmark': 0.41993165,
+'Djibouti': 0.5890022,
+'Dominica': 0.5867686,
+'Dominican Republic': 0.60446805,
+'East Timor': 0.497355,
+'Ecuador': 0.6065842,
+'Egypt': 0.53618693,
+'El Salvador': 0.5943008,
+'Equatorial Guinea': 0.6222162,
+'Eritrea': 0.53543496,
+'Estonia': 0.46075433,
+'Eswatini': 0.6958033,
+'Ethiopia': 0.53543496,
+'Fiji': 0.5586854,
+'Finland': 0.4257969,
+'France': 0.45697433,
+'Gabon': 0.54395306,
+'Gambia': 0.568003,
+'Georgia': 0.55792403,
+'Germany': 0.47124517,
+'Ghana': 0.59726155,
+'Greece': 0.46405205,
+'Greenland': 0.55868536,
+'Grenada': 0.5867686,
+'Guatemala': 0.6425302,
+'Guinea': 0.47070777,
+'GuineaBissau': 0.51331246,
+'Guyana': 0.6425302,
+'Haiti': 0.6425302,
+'Honduras': 0.6425302,
+'Hungary': 0.43166006,
+'Iceland': 0.35056135,
+'India': 0.61603135,
+'Indonesia': 0.58022624,
+'Iran': 0.58839047,
+'Iraq': 0.5448167,
+'Ireland': 0.44807878,
+'Israel': 0.5803991,
+'Italy': 0.51385236,
+'Jamaica': 0.6425302,
+'Japan': 0.5104264,
+'Jordan': 0.5613366,
+'Kazakhstan': 0.50471646,
+'Kenya': 0.5738777,
+'Kiribati': 0.5586854,
+'Kosovo': 0.46680707,
+'Kuwait': 0.511456,
+'Kyrgyzstan': 0.50801957,
+'Laos': 0.58769375,
+'Latvia': 0.46646357,
+'Lebanon': 0.6448293,
+'Lesotho': 0.60758424,
+'Liberia': 0.528644,
+'Libya': 0.5491668,
+'Liechtenstein': 0.4832709,
+'Lithuania': 0.46023446,
+'Luxembourg': 0.48341176,
+'Madagascar': 0.59951663,
+'Malawi': 0.5692985,
+'Malaysia': 0.4889568,
+'Maldives': 0.47674984,
+'Mali': 0.53791356,
+'Malta': 0.4199606,
+'Marshall Islands': 0.5586854,
+'Mauritania': 0.49442843,
+'Mauritius': 0.5553409,
+'Mexico': 0.70897335,
+'Micronesia country': 0.5586854,
+'Moldova': 0.47286516,
+'Monaco': 0.48327088,
+'Mongolia': 0.53195095,
+'Montenegro': 0.5041343,
+'Morocco': 0.5630795,
+'Mozambique': 0.6777551,
+'Myanmar': 0.5210472,
+'Namibia': 0.7310851,
+'Nauru': 0.5586855,
+'Nepal': 0.50213414,
+'Netherlands': 0.38884494,
+'New Caledonia': 0.5586854,
+'New Zealand': 0.45545965,
+'Nicaragua': 0.6425302,
+'Niger': 0.52414024,
+'Nigeria': 0.52561265,
+'North Korea': 0.5530963,
+'North Macedonia': 0.4191662,
+'Norway': 0.40525466,
+'Oman': 0.66744375,
+'Pakistan': 0.5120992,
+'Palau': 0.5586854,
+'Palestine': 0.599405,
+'Panama': 0.6425302,
+'Papua New Guinea': 0.5761988,
+'Paraguay': 0.6425302,
+'Peru': 0.6874571,
+'Philippines': 0.5509828,
+'Poland': 0.48616737,
+'Portugal': 0.46795404,
+'Puerto Rico': 0.5867687,
+'Qatar': 0.65809065,
+'Romania': 0.54234475,
+'Russia': 0.5873387,
+'Rwanda': 0.62015283,
+'Saint Kitts and Nevis': 0.5867686,
+'Saint Lucia': 0.5867686,
+'Saint Vincent and the Grenadines': 0.5867686,
+'Samoa': 0.5586855,
+'San Marino': 0.4832709,
+'Sao Tome and Principe': 0.58935624,
+'Saudi Arabia': 0.63647324,
+'Senegal': 0.54358023,
+'Serbia': 0.5133976,
+'Seychelles': 0.61554885,
+'Sierra Leone': 0.5482771,
+'Singapore': 0.5134057,
+'Slovakia': 0.39192307,
+'Slovenia': 0.3906717,
+'Solomon Islands': 0.5586855,
+'Somalia': 0.5739956,
+'South Africa': 0.738653,
+'South Korea': 0.45704973,
+'South Sudan': 0.6044899,
+'Spain': 0.4293039,
+'Sri Lanka': 0.5754369,
+'Sudan': 0.5318018,
+'Suriname': 0.6425302,
+'Sweden': 0.3938027,
+'Switzerland': 0.40446737,
+'Syria': 0.63791925,
+'Taiwan': 0.6182599,
+'Tajikistan': 0.52300566,
+'Tanzania': 0.5932643,
+'Thailand': 0.6355677,
+'Togo': 0.5573992,
+'Tonga': 0.5586855,
+'Trinidad and Tobago': 0.6425302,
+'Tunisia': 0.61765814,
+'Turkey': 0.61518335,
+'Turkmenistan': 0.59871083,
+'Tuvalu': 0.55868536,
+'Uganda': 0.6143712,
+'Ukraine': 0.38548,
+'United Arab Emirates': 0.5830809,
+'United Kingdom': 0.4737635,
+'United States': 0.5868841,
+'Uruguay': 0.5687862,
+'Uzbekistan': 0.556089,
+'Vanuatu': 0.5586854,
+'Venezuela': 0.6425302,
+'Vietnam': 0.54638374,
+'Yemen': 0.67522407,
+'Zambia': 0.6675602,
+'Zimbabwe': 0.61889285}, {'Albania': 0.2941963,
+'Armenia': 0.2715465,
+'Australia': 0.33829018,
+'Austria': 0.3120468,
+'Bangladesh': 0.30930254,
+'Belarus': 0.24383356,
+'Belgium': 0.26823103,
+'Benin': 0.34395808,
+'Bhutan': 0.2845992,
+'Bolivia': 0.42050114,
+'Brazil': 0.5163944,
+'Bulgaria': 0.39470536,
+'Burkina Faso': 0.37391287,
+'Burundi': 0.37456086,
+'Cameroon': 0.42176074,
+'Canada': 0.31114635,
+'Central African Republic': 0.43034458,
+'Chad': 0.37357685,
+'Chile': 0.43042782,
+'China': 0.36019513,
+'Colombia': 0.53881925,
+'Costa Rica': 0.4582914,
+'Cote dIvoire': 0.35275364,
+'Croatia': 0.30105957,
+'Cyprus': 0.318384,
+'Czechia': 0.25713998,
+'Democratic Republic of Congo': 0.4467324,
+'Denmark': 0.2992485,
+'Dominican Republic': 0.38971257,
+'Ecuador': 0.45195475,
+'Egypt': 0.28482038,
+'El Salvador': 0.39802378,
+'Equatorial Guinea': 0.38542363,
+'Estonia': 0.30707377,
+'Ethiopia': 0.31141794,
+'Fiji': 0.30706868,
+'Finland': 0.27399832,
+'France': 0.3180931,
+'Gambia': 0.38757205,
+'Georgia': 0.33853805,
+'Germany': 0.3243345,
+'Greece': 0.3343871,
+'Guatemala': 0.45212683,
+'GuineaBissau': 0.33435068,
+'Honduras': 0.45676118,
+'Iceland': 0.26802558,
+'India': 0.25514996,
+'Indonesia': 0.34894395,
+'Iran': 0.35884795,
+'Iraq': 0.2977404,
+'Ireland': 0.2897247,
+'Israel': 0.3789385,
+'Italy': 0.34344622,
+'Jamaica': 0.39874473,
+'Japan': 0.32339275,
+'Kazakhstan': 0.29191533,
+'Kenya': 0.37743774,
+'Kiribati': 0.27832702,
+'Kosovo': 0.38305664,
+'Kyrgyzstan': 0.2718802,
+'Latvia': 0.3397468,
+'Lebanon': 0.35281137,
+'Lithuania': 0.35961652,
+'Luxembourg': 0.33591464,
+'Madagascar': 0.3681921,
+'Malawi': 0.38542736,
+'Malaysia': 0.40668428,
+'Maldives': 0.2928509,
+'Mali': 0.35653594,
+'Malta': 0.34587276,
+'Marshall Islands': 0.35482943,
+'Mauritania': 0.31996748,
+'Mexico': 0.43454006,
+'Micronesia countryMoldova': 0.26764753,
+'Mongolia': 0.31416476,
+'Montenegro': 0.34296975,
+'Mozambique': 0.49557135,
+'Nepal': 0.30020264,
+'Netherlands': 0.2574387,
+'Niger': 0.32862565,
+'Nigeria': 0.3389487,
+'North Macedonia': 0.3350583,
+'Norway': 0.2653081,
+'Palestine': 0.36381876,
+'Panama': 0.49733543,
+'Paraguay': 0.44245335,
+'Peru': 0.40125862,
+'Philippines': 0.35203487,
+'Poland': 0.28466788,
+'Portugal': 0.33851567,
+'Romania': 0.29828945,
+'Russia': 0.36068243,
+'Rwanda': 0.39364448,
+'Senegal': 0.3615772,
+'Serbia': 0.3280289,
+'Slovakia': 0.23817715,
+'Slovenia': 0.24681959,
+'South Korea': 0.32906574,
+'Spain': 0.33407936,
+'Sri Lanka': 0.37663776,
+'Suriname': 0.39179897,
+'Sweden': 0.2927833,
+'Switzerland': 0.33795178,
+'Syria': 0.26628074,
+'Taiwan': 0.31566375,
+'Tajikistan': 0.36108002,
+'Thailand': 0.3349489,
+'Togo': 0.37858006,
+'Tonga': 0.27095765,
+'Tunisia': 0.33716425,
+'Turkey': 0.44467676,
+'Uganda': 0.42702177,
+'Ukraine': 0.25627363,
+'United Kingdom': 0.32414633,
+'United States': 0.41818878,
+'Uruguay': 0.39984146,
+'Uzbekistan': 0.34563366,
+'Vanuatu': 0.32317576,
+'Vietnam': 0.36093006,
+'Zambia': 0.5148495,
+'Zimbabwe': 0.5025645},{'Lebanon': 0.9158175129,
+'China': 0.7811292779,
+'Germany': 0.6971675776,
+'Ukraine': 0.68106305,
+'Tunisia': 0.6585235103,
+'United States': 0.6443300372,
+'Sri Lanka': 0.6388231657,
+'South Africa': 0.6378362376,
+'Namibia': 0.635948257,
+'Thailand': 0.6326638266,
+'Madagascar': 0.6317788092,
+'Angola': 0.630510915,
+'Mexico': 0.6299483219,
+'Mozambique': 0.6284166114,
+'Morocco': 0.6102685162,
+'Jordan': 0.6029140566,
+'United Kingdom': 0.5951300364,
+'France': 0.5854452823,
+'Cameroon': 0.5798533481,
+'Bolivia': 0.5751617166,
+'India': 0.567654966,
+'Czechia': 0.5673865853,
+'Estonia': 0.5664585355,
+'Pakistan': 0.5634286339,
+'Philippines': 0.5585726873,
+'Jamaica': 0.553992699,
+'Cambodia': 0.5532559598,
+'Kuwait': 0.551507308,
+'Zambia': 0.5513972919,
+'Honduras': 0.5511940508,
+'Uganda': 0.5458440946,
+'Tanzania': 0.5448299689,
+'Ecuador': 0.5425543168,
+'Botswana': 0.5414017424,
+'Oman': 0.5409782418,
+'Nigeria': 0.5397687804,
+'Spain': 0.5397258256,
+'Gambia': 0.5376540571,
+'Nepal': 0.5374213925,
+'Japan': 0.5369018287,
+'Argentina': 0.5335332371,
+'Malaysia': 0.5329809229,
+'Belarus': 0.5328372948,
+'Hungary': 0.5326230396,
+'Peru': 0.5290642002,
+'Algeria': 0.5277124839,
+'Senegal': 0.5255488709,
+'Russia': 0.5215757371,
+'Brazil': 0.5212841175,
+'Indonesia': 0.5186548291,
+'Egypt': 0.517642933,
+'Romania': 0.5136026116,
+'Guatemala': 0.5128621463,
+'El Salvador': 0.5115105589,
+'Colombia': 0.5105765642,
+'Paraguay': 0.5076455309,
+'Ghana': 0.5059337056,
+'Italy': 0.5029559528,
+'Moldova': 0.50152399,
+'Kenya': 0.5007795477,
+'Portugal': 0.5005036084,
+'Nicaragua': 0.4975447165,
+'Mongolia': 0.4971757597,
+'Slovakia': 0.4913059942,
+'Mauritius': 0.491204684,
+'Niger': 0.489632289,
+'South Korea': 0.4886662579,
+'Democratic Republic of Congo': 0.4853650749,
+'Cote dIvoire': 0.4807727375,
+'Poland': 0.4799575521,
+'Kyrgyzstan': 0.4747831798,
+'Canada': 0.4740963892,
+'Azerbaijan': 0.470735031,
+'Lithuania': 0.469103851,
+'Saudi Arabia': 0.468293059,
+'Kazakhstan': 0.4678402208,
+'Netherlands': 0.4677817232,
+'Iran': 0.4658889621,
+'Latvia': 0.4649287492,
+'Austria': 0.4574278244,
+'Ethiopia': 0.4563652317,
+'Chile': 0.4548096061,
+'Vietnam': 0.4528807195,
+'Uruguay': 0.4432369118,
+'Belgium': 0.4428082461,
+'Slovenia': 0.4422491027,
+'Costa Rica': 0.4385221873,
+'Turkey': 0.4296803065,
+'Bangladesh': 0.4257554001,
+'Finland': 0.4238032218,
+'Bahrain': 0.4208576338,
+'Rwanda': 0.4177526662,
+'United Arab Emirates': 0.4170996139,
+'Armenia': 0.4069748758,
+'Greece': 0.4057197508,
+'Albania': 0.3952677238,
+'Croatia': 0.3887192194,
+'Israel': 0.388098504,
+'Panama': 0.3772646821,
+'Sweden': 0.3673956368,
+'New Zealand': 0.3548949039,
+'Malta': 0.3447760609,
+'Singapore': 0.3285540584,
+'Georgia': 0.3018473933,
+'Cyprus': 0.290544036,
+'Australia': 0.2763595552,
+'Denmark': 0.2625025547,
+'Qatar': 0.2567919185,
+'Iceland': 0.2515792476,
+'Switzerland': 0.2127138543,
+'Norway': 0.1585632577,
+'Ireland': 0.1272884581,
+'Luxembourg': 0.1146468}]
+let colors = [false, true, true, true, true]
+let number = 0
+function hex(number){
+    const decimalNumber = number;
+    const hexString = decimalNumber.toString(16);
+    if(hexString.length == 1){
+        return '0' + hexString    
+    }
+    return hexString
+}
+function rgb(red, green, blue){
+    return '#' + hex(Math.floor(red * 255)) + hex(Math.floor(green * 255)) + hex(Math.floor(blue * 255))
+}
+function getColor(value) {
+    if(colors[number] == true){
+        value = 1 - value   
+    }
+    return rgb((1 - value), value, value)
+}
+function fixName(name) {
+  return name.replace(/[’‘]/g, "'");
+}
+function load_map(){
+    fetch('https://wordworm.neocities.org/Word%20Hash/geojson.json')
+      .then(response => response.json())
+      .then(worldData => {
+            var nameToIso3 = {};
+            worldData.features.forEach(feature => {
+              const name = feature.properties.NAME;
+              const iso3 = feature.properties.ADM0_A3;
+              if (name && iso3) {
+                nameToIso3[name] = iso3;
+              }
+            });
+            worldData.features.forEach(f => {
+                if (f.properties.ADM0_A3 === "COD") {
+                }
+            });
+            var owidOverrides = {
+              "United States": "United States of America",
+              "Democratic Republic of Congo": "Dem. Rep. Congo",
+              "Central African Republic": "Central African Rep."
+            };
+            function getIsoFromOwid(name) {
+              const neName = owidOverrides[name] || name;
+              if(neName == "Ivory Coast"){
+                return "CIV"
+              }
+              return nameToIso3[neName];
+            }
+            var countryData = {};
+    
+            for (var country in list[number]) {
+              var iso = getIsoFromOwid(country);
+              if (iso) {
+                countryData[iso] = list[number][country];
+              }
+            }
+            var geoLayer = L.geoJson(worldData, {
+              style: function (feature) {
+                var iso = feature.properties.ADM0_A3;
+                var value = countryData[iso];
+            
+                return {
+                  fillColor: value ? getColor(value) : '#eee',
+                  weight: 1,
+                  color: '#444',
+                  fillOpacity: 0.75
+                };
+              },
+            
+              onEachFeature: function (feature, layer) {
+                var iso = feature.properties.ADM0_A3;
+                var value = countryData[iso];
+            
+                layer.bindPopup(
+                  `<b>${feature.properties.NAME}</b><br>` +
+                  (value ? `Value: ${value}` : 'No data')
+                );
+              }
+            }).addTo(map);
+            
+            map.fitBounds(geoLayer.getBounds());
+      });
+}
+function is_mobile(){
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // It's a mobile device
+        return true;
+    } else {
+        // It's a desktop or other device
+        return false;
+    }
+}
+let if_is_mobile = is_mobile();
+function select(element){
+    number = Array.from(element.parentElement.children).indexOf(element)
+    console.log(number)
+    load_map()
+    document.getElementById("explanation").innerHTML = texts[language_select].split("@")[number]
+    if(if_is_mobile){
+        hover(element)
+    }
+}
+function select_language(element){
+    language_select = Array.from(element.parentElement.children).indexOf(element)
+    document.getElementById("main").hidden = false
+    document.getElementById("language_select").hidden = true
+    document.getElementById("map").style.width = window.innerWidth
+    document.getElementById("map").style.height = window.innerHeight / 2
+    setTimeout(() => {
+        map.invalidateSize()
+    }, 0)
+}
+function hover(element){
+    hover_on_top_of = Array.from(element.parentElement.children).indexOf(element)
+    document.getElementById('tooltip').innerText = simple_language[language_select].split("@")[hover_on_top_of]
+}
+if(if_is_mobile){
+    for(let i = 0; i < document.getElementById("btns").children.length; i++){
+        document.getElementById("btns").children[i].onmouseleave = function(){}
+    }
+}
+</script>
+</body>
+</html>
