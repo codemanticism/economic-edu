@@ -5,7 +5,7 @@ function substitute(element){
   if(element.tagName == "INPUT"){
     try{
       const text = element.placeholder;
-      eval("const variable = {" + text.replaceAll("&quot;", '"') + "}")
+      const variable = eval("({" + text.replaceAll("&quot;", '"') + "})")
       element.placeholder = variable[code_of_language_selected]
     }catch{
       console.log("*", element);
@@ -13,7 +13,7 @@ function substitute(element){
   }else if(tags.includes(element.tagName)){
     try{
       const text = element.innerText;
-      eval("const variable = {" + text + "}")
+      const variable = eval("({" + text + "})")
       element.innerText = variable[code_of_language_selected]
     }catch{
       console.log("*", element);
