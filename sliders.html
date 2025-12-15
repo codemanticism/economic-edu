@@ -21,7 +21,7 @@ e<html>
     <script>
       initialize(["en"])
       function value_function(x) {
-        return Math.min(Math.max(Math.log(x + 1) / Math.log(1000), 0), 1);
+        return Math.min(Math.max((Math.log(x / 100) / Math.log(750)), 0), 1);
       }
       
       const power = document.getElementById("power");
