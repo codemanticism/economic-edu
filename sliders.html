@@ -39,7 +39,10 @@
         const pop = Number(population.value) || 8000000000;
         const g = Number(gdp.value) || 1e+14;
         document.getElementById("number1").innerText = economy.value + "%"
-        power.value = value_function((e * g) / (pop * s));
+        const number = value_function((e * g) / (pop * s));a
+        if((number >= 0) || (number <= 1)){
+          power.value = number;
+        }
         document.getElementById("result").innerText = power.value
       });
       
@@ -49,7 +52,10 @@
         const pop = Number(population.value) || 8000000000;
         const g = Number(gdp.value) || 1e+14;
         document.getElementById("number2").innerText = share.value + "%"
-        power.value = value_function((e * g) / (pop * s));
+        const number = value_function((e * g) / (pop * s));a
+        if((number >= 0) || (number <= 1)){
+          power.value = number;
+        }
         document.getElementById("result").innerText = power.value
       });
 
