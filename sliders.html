@@ -20,43 +20,43 @@ e<html>
     <script src="dealing_with_language.js"></script>
     <script>
       initialize(["en"])
+      function value_function(x) {
+        return Math.min(Math.max(Math.log(x + 1) / Math.log(1000), 0), 1);
+      }
+      
       const power = document.getElementById("power");
       const economy = document.getElementById("economy");
       const share = document.getElementById("share");
       const population = document.getElementById("population");
       const gdp = document.getElementById("gdp");
-      function value_function(x) {
-        // x could be any number; we need to map it to 0–1 for the slider
-        // Example: logarithmic scaling between 0 and 1
-        return Math.min(Math.max(Math.log(x + 1) / Math.log(1000), 0), 1);
-      }      
+      
       power.addEventListener("input", () => {
         const p = Number(power.value);
         const s = Number(share.value) / 100;
-        const pop = Number(population.value);
-        const g = Number(gdp.value);
+        const pop = Number(population.value) || 1;
+        const g = Number(gdp.value) || 1;
       
-        economy.value =
-          (Math.exp(p * Math.log(750) + Math.log(100)) * (s * pop)) / g;
+        economy.value = ((Math.exp(p * Math.log(750) + Math.log(100))) * s * pop) / g;
       });
       
       economy.addEventListener("input", () => {
         const e = Number(economy.value);
-        const s = Number(share.value);
-        const pop = Number(population.value);
-        const g = Number(gdp.value);
+        const s = Number(share.value) / 100;
+        const pop = Number(population.value) || 1;
+        const g = Number(gdp.value) || 1;
       
         power.value = value_function((e * g) / (pop * s));
       });
       
       share.addEventListener("input", () => {
-        const s = Number(share.value);
+        const s = Number(share.value) / 100;
         const e = Number(economy.value);
-        const pop = Number(population.value);
-        const g = Number(gdp.value);
+        const pop = Number(population.value) || 1;
+        const g = Number(gdp.value) || 1;
       
         power.value = value_function((e * g) / (pop * s));
       });
+
 
     </script>
   </body>
