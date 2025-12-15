@@ -30,15 +30,6 @@ e<html>
       const population = document.getElementById("population");
       const gdp = document.getElementById("gdp");
       
-      power.addEventListener("click", () => {
-        const p = Number(power.value);
-        const s = Number(share.value) / 100;
-        const pop = Number(population.value) || 1;
-        const g = Number(gdp.value) || 1;
-      
-        economy.value = ((Math.exp(p * Math.log(750) + Math.log(100))) * s * pop) / g;
-      });
-      
       economy.addEventListener("click", () => {
         const e = Number(economy.value);
         const s = Number(share.value) / 100;
