@@ -891,7 +891,7 @@ function fixName(name) {
   return name.replace(/[’‘]/g, "'");
 }
 function load_map(){
-    fetch('https://wordworm.neocities.org/Word%20Hash/geojson.json')
+    fetch('geojson.json')
       .then(response => response.json())
       .then(worldData => {
             var nameToIso3 = {};
