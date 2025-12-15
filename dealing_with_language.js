@@ -5,7 +5,7 @@ function substitute(element){
   if(element.tagName == "INPUT"){
     try{
       const text = element.placeholder;
-      eval("const variable = {" + text.replaceAll("quot;", '"') + "}")
+      eval("const variable = {" + text.replaceAll("&quot;", '"') + "}")
       element.placeholder = variable[code_of_language_selected]
     }catch{
       console.log("*", element);
