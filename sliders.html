@@ -31,7 +31,7 @@ e<html>
       const gdp = document.getElementById("gdp");
       
       economy.addEventListener("click", () => {
-        const e = Number(economy.value);
+        const e = Number(economy.value) / 100;
         const s = Number(share.value) / 100;
         const pop = Number(population.value) || 1;
         const g = Number(gdp.value) || 1;
@@ -41,7 +41,7 @@ e<html>
       
       share.addEventListener("click", () => {
         const s = Number(share.value) / 100;
-        const e = Number(economy.value);
+        const e = Number(economy.value) / 100;
         const pop = Number(population.value) || 1;
         const g = Number(gdp.value) || 1;
       
