@@ -23,23 +23,27 @@ e<html>
       function value_function(x){
         return Math.log(x / 100) / Math.log(750)
       }
+      let power = 0;
+      let economy = 0;
+      let share = 0;
       const slider = document.getElementById("power");
       slider.addEventListener("input", function () {
           const value = Number(slider.value);
-          console.log(value); // string like "0.73"
-          document.getElementById("economy").value = (((Math.E)**((value * Math.log(750)) + Math.log(100))) * ((Number(document.getElementById("share").value / 100)) * Number(document.getElementById("population").value))) / Number(document.getElementById("gdp").value)
+          power = value;
+          const pop = (share * Number(document.getElementById("population").value);
+          document.getElementById("economy").value = 100 * (( (((Math.E)**((value * Math.log(750)) + Math.log(100))) * pop)) / document.getElementById("gdp").value);
       });
       const slider2 = document.getElementById("economy");
       slider2.addEventListener("input", function () {
           const value = Number(slider2.value);
-          console.log(value); // string like "0.73"
-          document.getElementById("power").value = value_function((Number(value) * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * Number(document.getElementById("share").value)))
+          economy = value / 100;
+          document.getElementById("power").value = value_function((economy * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * share))
       });
       const slider3 = document.getElementById("share");
       slider3.addEventListener("input", function () {
           const value = Number(slider3.value);
-          console.log(value); // string like "0.73"
-          document.getElementById("power").value = value_function((Number(document.getElementById("economy").value) * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * Number(value)))
+          share = value / 100
+          document.getElementById("power").value = value_function((economy * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * share))
       });      
     </script>
   </body>
