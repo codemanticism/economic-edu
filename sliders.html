@@ -20,31 +20,40 @@ e<html>
     <script src="dealing_with_language.js"></script>
     <script>
       initialize(["en"])
-      function value_function(x){
-        return Math.log(x / 100) / Math.log(750)
-      }
-      let power = 0;
-      let economy = 0;
-      let share = 0;
-      const slider = document.getElementById("power");
-      slider.addEventListener("input", function () {
-          const value = Number(slider.value);
-          power = value;
-          const pop = (share * Number(document.getElementById("population").value));
-          document.getElementById("economy").value = 100 * (( (((Math.E)**((value * Math.log(750)) + Math.log(100))) * pop)) / document.getElementById("gdp").value);
+      const power = document.getElementById("power");
+      const economy = document.getElementById("economy");
+      const share = document.getElementById("share");
+      const population = document.getElementById("population");
+      const gdp = document.getElementById("gdp");
+      
+      power.addEventListener("input", () => {
+        const p = Number(power.value);
+        const s = Number(share.value) / 100;
+        const pop = Number(population.value);
+        const g = Number(gdp.value);
+      
+        economy.value =
+          (Math.exp(p * Math.log(750) + Math.log(100)) * (s * pop)) / g;
       });
-      const slider2 = document.getElementById("economy");
-      slider2.addEventListener("input", function () {
-          const value = Number(slider2.value);
-          economy = value / 100;
-          document.getElementById("power").value = value_function((economy * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * share))
+      
+      economy.addEventListener("input", () => {
+        const e = Number(economy.value);
+        const s = Number(share.value);
+        const pop = Number(population.value);
+        const g = Number(gdp.value);
+      
+        power.value = value_function((e * g) / (pop * s));
       });
-      const slider3 = document.getElementById("share");
-      slider3.addEventListener("input", function () {
-          const value = Number(slider3.value);
-          share = value / 100
-          document.getElementById("power").value = value_function((economy * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * share))
-      });      
+      
+      share.addEventListener("input", () => {
+        const s = Number(share.value);
+        const e = Number(economy.value);
+        const pop = Number(population.value);
+        const g = Number(gdp.value);
+      
+        power.value = value_function((e * g) / (pop * s));
+      });
+
     </script>
   </body>
 </html>
