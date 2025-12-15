@@ -7,16 +7,16 @@ function substitute(element){
       const text = element.placeholder;
       const variable = eval("({" + text.replaceAll("&quot;", '"') + "})")
       element.placeholder = variable[code_of_language_selected]
-    }catch{
-      console.log("*", element);
+    }catch(err){
+      console.log(err, "*", element);
     }
   }else if(tags.includes(element.tagName)){
     try{
       const text = element.innerText;
       const variable = eval("({" + text + "})")
       element.innerText = variable[code_of_language_selected]
-    }catch{
-      console.log("*", element);
+    }catch(err){
+      console.log(err, "*", element);
     }
   }
 }
