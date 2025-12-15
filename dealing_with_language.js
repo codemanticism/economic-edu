@@ -27,12 +27,14 @@ function review(element){
 }
 function clicked_on(btn){
   code_of_language_selected = btn.id
+  document.getElementById("other_div").hidden = true
   document.getElementById("interface").hidden = false
   review(document.getElementById("interface"))
 }
 function initialize(languages){
   document.getElementById("interface").hidden = true
   const div = document.createElement("div")
+  div.id = "other_div"
   for(let i = 0; i < languages.length; i++){
     const button = document.createElement("img")
     button.innerHTML = "<h3> " + names[languages[i]] + "</h3> <img src='https://www.unknown.nu/flags/images/" + languages[i] + "-100'> "  
