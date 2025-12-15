@@ -5,8 +5,8 @@
   <body style="color: white; background-color: black; font-family: Arial">
     <div id="interface">
       <h4>"en": "Write your inputs"</h4>
-      <input type="number" placeholder='"en": "Global GDP"'></input>
-      <input type="number" placeholder='"en": "Global population"'></input>
+      <input type="number" id="gdp" placeholder='"en": "Global GDP"'></input>
+      <input type="number" id="population" placeholder='"en": "Global population"'></input>
       <br>
       <h4>"en": "GDP per capita (≈ income)"</h4>
       <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="power">
@@ -20,6 +20,27 @@
     <script src="dealing_with_language.js"></script>
     <script>
       initialize(["en"])
+      function value_function(x){
+        return Math.log(x / 100) / Math.log(750)
+      }
+      const slider = document.getElementById("power");
+      slider.addEventListener("input", function () {
+          const value = Number(slider.value);
+          console.log(value); // string like "0.73"
+          document.getElementById("economy").value = (((Math.E)**((value * Math.log(750)) + Math.log(100))) * ((Number(document.getElementById("share").value / 100)) * Number(document.getElementById("population").value))) / Number(document.getElementById("gdp").value))
+      });
+      const slider2 = document.getElementById("economy");
+      slider2.addEventListener("input", function () {
+          const value = Number(slider2.value);
+          console.log(value); // string like "0.73"
+          document.getElementById("power").value = value_function((Number(value) * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * Number(document.getElementById("share").value)))
+      });
+      const slider3 = document.getElementById("share");
+      slider3.addEventListener("input", function () {
+          const value = Number(slider3.value);
+          console.log(value); // string like "0.73"
+          document.getElementById("power").value = value_function((Number(document.getElementById("economy").value) * Number(document.getElementById("gdp").value)) / (Number(document.getElementById("population").value) * Number(value)))
+      });      
     </script>
   </body>
 </html>
