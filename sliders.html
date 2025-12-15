@@ -30,7 +30,7 @@ e<html>
       const population = document.getElementById("population");
       const gdp = document.getElementById("gdp");
       
-      power.addEventListener("input", () => {
+      power.addEventListener("click", () => {
         const p = Number(power.value);
         const s = Number(share.value) / 100;
         const pop = Number(population.value) || 1;
@@ -39,7 +39,7 @@ e<html>
         economy.value = ((Math.exp(p * Math.log(750) + Math.log(100))) * s * pop) / g;
       });
       
-      economy.addEventListener("input", () => {
+      economy.addEventListener("click", () => {
         const e = Number(economy.value);
         const s = Number(share.value) / 100;
         const pop = Number(population.value) || 1;
@@ -48,7 +48,7 @@ e<html>
         power.value = value_function((e * g) / (pop * s));
       });
       
-      share.addEventListener("input", () => {
+      share.addEventListener("click", () => {
         const s = Number(share.value) / 100;
         const e = Number(economy.value);
         const pop = Number(population.value) || 1;
