@@ -899,6 +899,7 @@ function load_map(){
             worldData.features.forEach(feature => {
               const name = feature.properties.NAME;
               const iso3 = feature.properties.ADM0_A3;
+              console.log(name)
               if (name && iso3) {
                 nameToIso3[name] = iso3;
               }
