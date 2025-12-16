@@ -1371,17 +1371,17 @@ function load_map(){
               }
               return nameToIso3[neName];
             }
-            var countryData = {};
+            let countryData = {};
             let latest_year_id = 0
             const years = Object.keys(list[number])
             document.getElementById("years").innerHTML = ""
-            for( var year_count = 0; year_count < years.length; year_count += 1 ){
+            for( let year_count = 0; year_count < years.length; year_count += 1 ){
                 const year_button = document.createElement("button")
                 year_button.innerText = years[year_count]
                 year_button.onclick = function(){ load_map_again(this) }
                 document.getElementById("years").append( year_button )
                 if ( years[year_count] > years[latest_year_id] ){
-                    year_count = latest_year_id
+                    latest_year_id = year_count
                 }
             }
             for (var country in list[number][years[latest_year_id]] ) {
