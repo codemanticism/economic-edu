@@ -774,7 +774,7 @@ let list = [{2024: {'Botswana': 0.538,
 'Vanuatu': 0.32317576,
 'Vietnam': 0.36093006,
 'Zambia': 0.5148495,
-'Zimbabwe': 0.5025645}},{2024: {'Lebanon': 0.9158175129,
+'Zimbabwe': 0.5025645}}, {2024: {'Lebanon': 0.9158175129,
 'China': 0.7811292779,
 'Germany': 0.6971675776,
 'Ukraine': 0.68106305,
@@ -1017,6 +1017,7 @@ function load_map(){
             var countryData = {};
             let latest_year_id = 0
             const years = Object.keys(list[number])
+            document.getElementById("years").innerHTML = ""
             for( var year_count = 0; year_count < years.length; year_count += 1 ){
                 const year_button = document.createElement("button")
                 year_button.innerText = years[year_count]
