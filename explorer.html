@@ -1016,7 +1016,7 @@ function load_map(){
             }
             var countryData = {};
             let latest_year_id = 0
-            const years = keys(list[number])
+            const years = Object.keys(list[number])
             for( var year_count = 0; year_count < years.length; year_count += 1 ){
                 const year_button = document.createElement("button")
                 year_button.value = years[year_count]
