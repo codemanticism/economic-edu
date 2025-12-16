@@ -910,7 +910,7 @@ function fixName(name) {
   return name.replace(/[’‘]/g, "'");
 }
 function load_map_again(elem){
-    const year = Number(elem.value);
+    const year = Number(elem.innerText);
     fetch('geojson.json')
       .then(response => response.json())
       .then(worldData => {
@@ -1019,7 +1019,7 @@ function load_map(){
             const years = Object.keys(list[number])
             for( var year_count = 0; year_count < years.length; year_count += 1 ){
                 const year_button = document.createElement("button")
-                year_button.value = years[year_count]
+                year_button.innerText = years[year_count]
                 year_button.onclick = function(){ load_map_again(this) }
                 document.getElementById("years").append( year_button )
                 if ( years[year_count] > years[latest_year_id] ){
