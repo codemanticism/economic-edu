@@ -20,7 +20,7 @@
       const years = document.getElementById("years");
       growth.addEventListener("click", () => {
         const _gdp = (Number(gdp.value) * (((100 + Number(growth.value)) / 100) ** (Number(years.value)))  ) + "$"
-        final_gdp_per_capita.innerText = String(_gdp) + "$"
+        final_gdp_per_capita.innerText = String(_gdp)
       });
       
 
