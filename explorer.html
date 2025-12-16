@@ -909,8 +909,8 @@ function getColor(value) {
 function fixName(name) {
   return name.replace(/[’‘]/g, "'");
 }
-function load_map_again(this){
-    const year = Number(this.value);
+function load_map_again(elem){
+    const year = Number(elem.value);
     fetch('geojson.json')
       .then(response => response.json())
       .then(worldData => {
