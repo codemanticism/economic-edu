@@ -37,7 +37,7 @@ function initialize(languages){
   const div = document.createElement("div")
   div.id = "other_div"
   for(let i = 0; i < languages.length; i++){
-    const button = document.createElement("div")
+    const button = document.createElement("button")
     button.innerHTML = "<h3> " + names[languages[i]] + "</h3> <img src='https://www.unknown.nu/flags/images/" + languages[i] + "-100'> "  
     button.id = languages[i]
     button.onclick = function(){ clicked_on(this) }
