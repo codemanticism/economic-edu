@@ -29,10 +29,10 @@
       const power = document.getElementById("power");
       const economy = document.getElementById("economy");
       const share = document.getElementById("share");
-      const population = document.getElementById("population");
-      const gdp = document.getElementById("gdp");
       
       economy.addEventListener("click", () => {
+        const population = document.getElementById("population");
+        const gdp = document.getElementById("gdp");
         const e = Number(economy.value) / 100;
         const s = Number(share.value) / 100;
         const pop = Number(population.value) || 8000000000;
@@ -49,6 +49,8 @@
       });
       
       share.addEventListener("click", () => {
+        const population = document.getElementById("population");
+        const gdp = document.getElementById("gdp");        
         const s = Number(share.value) / 100;
         const e = Number(economy.value) / 100;
         const pop = Number(population.value) || 8000000000;
