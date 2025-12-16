@@ -32,6 +32,7 @@ button { background-color: white; color: black}
 <button onmouseleave="document.getElementById('tooltip').innerText = ``" onmouseover="hover(this)" onclick="select(this)"> Growth efficiency </button>
 </div>
 <div id="map" ></div>
+<div id="years"> </div>
 <div id="explanation" style='color: white'>
 
 </div>
@@ -165,7 +166,7 @@ O coeficiente de Gini usa uma curva de Lorenz para calcular a desigualdade:
 Os Ginis apresentados refletem a desigualdade de rendimentos APÓS a tributação e NÃO ANTES da tributação.
 O coeficiente de Gini utiliza uma curva de Lorenz para calcular a desigualdade:
 <br><img width="640" height="360" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Economics_Gini_coefficient2.svg/500px-Economics_Gini_coefficient2.svg.png">@Fórmula: ((( ( ((((Média da percentagem de crescimento anual do PIB per capita ao longo de um período de cinco anos, exceto se não estiverem disponíveis dados para os cinco anos ) - ((1 - (PIB per capita / 48000))*7)) ) / (log(PIB)) ) )) ) - (Subíndice de receitas do índice de diversificação * 0,8))` ]
-let list = [{'Botswana': 0.538,
+let list = [{2024: {'Botswana': 0.538,
 'Albania': 0.615,
 'Armenia': 0.57,
 'Australia': 0.925,
@@ -209,7 +210,7 @@ let list = [{'Botswana': 0.538,
 'Germany': 0.946,
 'Greece': 0.755,
 'Guatemala': 0.576,
-'GuineaBissau': 0.455,
+'Guinea-Bissau': 0.455,
 'Honduras': 0.554,
 'Iceland': 0.95,
 'India': 0.546,
@@ -286,7 +287,7 @@ let list = [{'Botswana': 0.538,
 'Vanuatu': 0.512,
 'Vietnam': 0.623,
 'Zambia': 0.316,
-'Zimbabwe': 0.431}, {'Afghanistan': 0.29225096,
+'Zimbabwe': 0.431}}, {2023: {'Afghanistan': 0.29225096,
 'Albania': 0.19734354,
 'Algeria': 0.16809192,
 'Andorra': 0.14402476,
@@ -349,7 +350,7 @@ let list = [{'Botswana': 0.538,
 'Greece': 0.16824675,
 'Guatemala': 0.32801768,
 'Guinea': 0.31631193,
-'GuineaBissau': 0.35312974,
+'Guinea-Bissau': 0.35312974,
 'Haiti': 0.5206961,
 'Honduras': 0.35566714,
 'Hungary': 0.11335958,
@@ -455,7 +456,7 @@ let list = [{'Botswana': 0.538,
 'Vietnam': 0.21053678,
 'Yemen': 0.2318842,
 'Zambia': 0.63398504,
-'Zimbabwe': 0.5288754}, {'Afghanistan': 0.48317343,
+'Zimbabwe': 0.5288754}}, {2023: {'Afghanistan': 0.48317343,
 'Albania': 0.4818845,
 'Algeria': 0.5413402,
 'Andorra': 0.48327094,
@@ -527,7 +528,7 @@ let list = [{'Botswana': 0.538,
 'Grenada': 0.5867686,
 'Guatemala': 0.6425302,
 'Guinea': 0.47070777,
-'GuineaBissau': 0.51331246,
+'Guinea-Bissau': 0.51331246,
 'Guyana': 0.6425302,
 'Haiti': 0.6425302,
 'Honduras': 0.6425302,
@@ -653,7 +654,7 @@ let list = [{'Botswana': 0.538,
 'Vietnam': 0.54638374,
 'Yemen': 0.67522407,
 'Zambia': 0.6675602,
-'Zimbabwe': 0.61889285}, {'Albania': 0.2941963,
+'Zimbabwe': 0.61889285}}, {2024: {'Albania': 0.2941963,
 'Armenia': 0.2715465,
 'Australia': 0.33829018,
 'Austria': 0.3120468,
@@ -696,7 +697,7 @@ let list = [{'Botswana': 0.538,
 'Germany': 0.3243345,
 'Greece': 0.3343871,
 'Guatemala': 0.45212683,
-'GuineaBissau': 0.33435068,
+'Guinea-Bissau': 0.33435068,
 'Honduras': 0.45676118,
 'Iceland': 0.26802558,
 'India': 0.25514996,
@@ -773,7 +774,7 @@ let list = [{'Botswana': 0.538,
 'Vanuatu': 0.32317576,
 'Vietnam': 0.36093006,
 'Zambia': 0.5148495,
-'Zimbabwe': 0.5025645},{'Lebanon': 0.9158175129,
+'Zimbabwe': 0.5025645}},{2024: {'Lebanon': 0.9158175129,
 'China': 0.7811292779,
 'Germany': 0.6971675776,
 'Ukraine': 0.68106305,
@@ -885,7 +886,7 @@ let list = [{'Botswana': 0.538,
 'Switzerland': 0.2127138543,
 'Norway': 0.1585632577,
 'Ireland': 0.1272884581,
-'Luxembourg': 0.1146468}]
+'Luxembourg': 0.1146468}}]
 let colors = [false, true, true, true, true]
 let number = 0
 function hex(number){
@@ -907,6 +908,76 @@ function getColor(value) {
 }
 function fixName(name) {
   return name.replace(/[’‘]/g, "'");
+}
+function load_map_again(this){
+    const year = Number(this.value);
+    fetch('geojson.json')
+      .then(response => response.json())
+      .then(worldData => {
+            var nameToIso3 = {};
+            worldData.features.forEach(feature => {
+              const name = feature.properties.NAME;
+              const iso3 = feature.properties.ADM0_A3;
+              console.log(name)
+              if (name && iso3) {
+                nameToIso3[name] = iso3;
+              }
+            });
+            worldData.features.forEach(f => {
+                if (f.properties.ADM0_A3 === "COD") {
+                }
+            });
+            var owidOverrides = {
+              "United States": "United States of America",
+              "Democratic Republic of Congo": "Dem. Rep. Congo",
+              "Central African Republic": "Central African Rep.",
+              "Equatorial Guinea": "Eq. Guinea",
+              "Northern Cyprus": "N. Cyprus",
+              "South Sudan": "S. Sudan",
+              "Bosnia and Herzegovina": "Bosnia and Herz.",
+              "Dominican Republic": "Dominican Rep.",
+              "Western Sahara": "W. Sahara"               
+            };
+            function getIsoFromOwid(name) {
+              const neName = owidOverrides[name] || name;
+              if(neName == "Ivory Coast"){
+                return "CIV"
+              }
+              return nameToIso3[neName];
+            }
+            var countryData = {};
+            for (var country in list[number][year] ) {
+              var iso = getIsoFromOwid(country);
+              if (iso) {
+                countryData[iso] = list[number][year][country];
+              }
+            }
+            var geoLayer = L.geoJson(worldData, {
+              style: function (feature) {
+                var iso = feature.properties.ADM0_A3;
+                var value = countryData[iso];
+            
+                return {
+                  fillColor: value ? getColor(value) : '#fff',
+                  weight: 1,
+                  color: '#444',
+                  fillOpacity: 0.75
+                };
+              },
+            
+              onEachFeature: function (feature, layer) {
+                var iso = feature.properties.ADM0_A3;
+                var value = countryData[iso];
+            
+                layer.bindPopup(
+                  `<b>${feature.properties.NAME}</b><br>` +
+                  (value ? `Value: ${value}` : 'No data')
+                );
+              }
+            }).addTo(map);
+            
+            map.fitBounds(geoLayer.getBounds());
+      });    
 }
 function load_map(){
     fetch('geojson.json')
@@ -944,11 +1015,21 @@ function load_map(){
               return nameToIso3[neName];
             }
             var countryData = {};
-    
-            for (var country in list[number]) {
+            let latest_year_id = 0
+            const years = keys(list[number])
+            for( var year_count = 0; year_count < years.length; year_count += 1 ){
+                const year_button = document.createElement("button")
+                year_button.value = years[year_count]
+                year_button.onclick = function(){ load_map_again(this) }
+                document.getElementById("years").append( year_button )
+                if ( years[year_count] > years[latest_year_id] ){
+                    year_count = latest_year_id
+                }
+            }
+            for (var country in list[number][years[latest_year_id]] ) {
               var iso = getIsoFromOwid(country);
               if (iso) {
-                countryData[iso] = list[number][country];
+                countryData[iso] = list[number][years[latest_year_id]][country];
               }
             }
             var geoLayer = L.geoJson(worldData, {
